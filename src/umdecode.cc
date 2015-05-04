@@ -11,9 +11,8 @@
 #include <iostream>
 #include <cstring>
 #include <cassert>
+#include "CCCHDecoder.hh"
 
-// Control Channel Type
-enum class CCT { UNKNOWN, FCCH, SCH, BCCH, CCCH, SDCCH, SACCH };
 
 std::ostream &operator<<(std::ostream &out, CCT const &cct) {
   switch (cct) {
@@ -202,21 +201,14 @@ uint8_t burst_offset_lookup(uint8_t const time_slot,
 }
 }
 
-class ChannelInfo {
-public:
-  ChannelInfo(uint8_t const time_slot, uint32_t const frame_number);
-  std::ostream &print(std::ostream &out) const;
-
-private:
-  CCT const m_cct;
-  uint8_t const m_sub_slot;
-  uint8_t const m_burst_offset;
-};
-
 ChannelInfo::ChannelInfo(uint8_t const time_slot, uint32_t const frame_number)
     : m_cct(channel_type_lookup(time_slot, frame_number)),
       m_sub_slot(sub_slot_lookup(time_slot, frame_number)),
       m_burst_offset(burst_offset_lookup(time_slot, frame_number)) {}
+
+CCT ChannelInfo::channel_type() const {
+  return m_cct;
+}
 
 std::ostream &ChannelInfo::print(std::ostream &out) const {
   out << "[" << m_cct << "," << (int)m_sub_slot << "," << (int)m_burst_offset
@@ -228,8 +220,6 @@ std::ostream &operator<<(std::ostream &out, ChannelInfo const &ci) {
   return ci.print(out);
 }
 
-uint8_t const burst_input_len = 148;
-
 uint8_t const bust_dummy[] = {
     0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0,
     1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
@@ -238,19 +228,6 @@ uint8_t const bust_dummy[] = {
     0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1,
     1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0};
 
-class Burst {
-public:
-  Burst(char const *const buf);
-  std::ostream &print(std::ostream &out) const;
-  bool is_dummy() const;
-
-private:
-  uint8_t const m_time_slot;
-  uint32_t const m_frame_number;
-  uint8_t const m_sub_slot;
-  ChannelInfo const m_channel_info;
-  uint8_t m_input[burst_input_len];
-};
 
 Burst::Burst(char const *const buf)
     : m_time_slot(atoi(buf + 6)), m_frame_number(atoi(buf + 24)),
@@ -263,6 +240,8 @@ Burst::Burst(char const *const buf)
     }
   }
 }
+
+ChannelInfo const & Burst::channel_info() const { return m_channel_info; }
 
 std::ostream &Burst::print(std::ostream &out) const {
   out << m_frame_number << "," << (int)m_time_slot << "," << (int)m_sub_slot
@@ -284,6 +263,8 @@ bool Burst::is_dummy() const {
 int main() {
   char buf[197];
 
+  CCCHDecoder ccch_decoder;
+  
   while (true) {
     ssize_t const rres(::read(0, buf, 197));
     if (rres == 0) {
@@ -299,8 +280,14 @@ int main() {
     Burst const b(buf);
 
     if (b.is_dummy()) {
-      std::cout << "Dummy" << std::endl;
-    } else
+      //      std::cout << "Skipping dummy Burst" << std::endl;
+      continue;
+    } else {
       std::cout << b << std::endl;
+    }
+
+    if(b.channel_info().channel_type()==CCT::CCCH) {
+      ccch_decoder.decode(b);
+    }
   }
 }
