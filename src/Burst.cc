@@ -1,7 +1,7 @@
 #include "Burst.hh"
 #include <cstring>
 
-Burst const & Burst::operator=(Burst const & that) {
+Burst const &Burst::operator=(Burst const &that) {
   m_time_slot = that.m_time_slot;
   m_frame_number = that.m_frame_number;
   m_sub_slot = that.m_sub_slot;
@@ -10,9 +10,9 @@ Burst const & Burst::operator=(Burst const & that) {
   return *this;
 }
 
-int8_t const * Burst::data() const {
-  return (int8_t const *)m_input;
-}
+int8_t const *Burst::data() const { return (int8_t const *)m_input; }
+
+uint32_t Burst::frame_number() const { return m_frame_number; }
 
 std::ostream &Burst::print_header(std::ostream &out) const {
   out << m_frame_number << "," << (int)m_time_slot << "," << (int)m_sub_slot

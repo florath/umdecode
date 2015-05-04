@@ -13,7 +13,6 @@
 #include <cassert>
 #include "CCCHDecoder.hh"
 
-
 std::ostream &operator<<(std::ostream &out, CCT const &cct) {
   switch (cct) {
   case CCT::UNKNOWN:
@@ -206,9 +205,7 @@ ChannelInfo::ChannelInfo(uint8_t const time_slot, uint32_t const frame_number)
       m_sub_slot(sub_slot_lookup(time_slot, frame_number)),
       m_burst_offset(burst_offset_lookup(time_slot, frame_number)) {}
 
-CCT ChannelInfo::channel_type() const {
-  return m_cct;
-}
+CCT ChannelInfo::channel_type() const { return m_cct; }
 
 std::ostream &ChannelInfo::print(std::ostream &out) const {
   out << "[" << m_cct << "," << (int)m_sub_slot << "," << (int)m_burst_offset
@@ -224,7 +221,6 @@ uint8_t const bust_dummy[] = {
     0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1,
     1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0};
 
-
 Burst::Burst(char const *const buf)
     : m_time_slot(atoi(buf + 6)), m_frame_number(atoi(buf + 24)),
       m_sub_slot(atoi(buf + 32)), m_channel_info(m_time_slot, m_frame_number) {
@@ -237,7 +233,7 @@ Burst::Burst(char const *const buf)
   }
 }
 
-ChannelInfo const & Burst::channel_info() const { return m_channel_info; }
+ChannelInfo const &Burst::channel_info() const { return m_channel_info; }
 
 std::ostream &operator<<(std::ostream &out, Burst const &b) {
   return b.print(out);
@@ -252,7 +248,7 @@ int main() {
 
   CCCHDecoder ccch_decoder;
   CCCHDecoder bcch_decoder;
-  
+
   while (true) {
     ssize_t const rres(::read(0, buf, 197));
     if (rres == 0) {
@@ -272,7 +268,7 @@ int main() {
       continue;
     }
 
-    switch(b.channel_info().channel_type()) {
+    switch (b.channel_info().channel_type()) {
     case CCT::BCCH:
       bcch_decoder.decode(b);
       break;

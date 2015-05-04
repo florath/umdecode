@@ -8,10 +8,10 @@ class ChannelInfo {
 public:
   ChannelInfo(uint8_t const time_slot, uint32_t const frame_number);
   std::ostream &print(std::ostream &out) const;
-  //  ChannelInfo &operator=(ChannelInfo const & that);
-  
+
   CCT channel_type() const;
-  
+  uint8_t burst_offset() const;
+
 private:
   CCT m_cct;
   uint8_t m_sub_slot;

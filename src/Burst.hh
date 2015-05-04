@@ -8,12 +8,13 @@ uint8_t const burst_input_len = 148;
 class Burst {
 public:
   Burst(char const *const buf);
-  std::ostream & print_header(std::ostream & out) const;
+  std::ostream &print_header(std::ostream &out) const;
   std::ostream &print(std::ostream &out) const;
   bool is_dummy() const;
-  ChannelInfo const & channel_info() const;
-  Burst const & operator=(Burst const &);
-  int8_t const * data() const;
+  ChannelInfo const &channel_info() const;
+  Burst const &operator=(Burst const &);
+  int8_t const *data() const;
+  uint32_t frame_number() const;
 
 private:
   uint8_t m_time_slot;
