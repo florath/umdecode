@@ -12,6 +12,7 @@
 
 static int FC_syndrome_shift(FC_CTX *ctx, unsigned int bit);
 
+#if 0
 static int
 outit(int *data, int len)
 {
@@ -22,6 +23,7 @@ outit(int *data, int len)
 	printf("\n");
 	return 0;
 }
+#endif
 
 int
 FC_init(FC_CTX *ctx, unsigned int crc_size, unsigned int data_size)
@@ -36,8 +38,10 @@ FC_init(FC_CTX *ctx, unsigned int crc_size, unsigned int data_size)
 int
 FC_check_crc(FC_CTX *ctx, unsigned char *input_bits, unsigned char *control_data)
 { 
-	int j,error_count = 0, error_index = 0, success_flag = 0, syn_index = 0;
+	int error_count = 0, success_flag = 0, syn_index = 0;
 	unsigned int i;
+	unsigned int error_index = 0;
+	unsigned int j;
 
 	ctx->syn_start = 0;
 	// reset the syndrome register

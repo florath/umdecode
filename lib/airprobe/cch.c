@@ -339,6 +339,7 @@ static void burstmap(unsigned char *iBLOCK, unsigned char *eBLOCK,
  */
 
 
+#if 0
 static void decode_burstmap(unsigned char *iBLOCK, unsigned char *eBLOCK,
    unsigned char *hl, unsigned char *hn) {
 
@@ -351,8 +352,9 @@ static void decode_burstmap(unsigned char *iBLOCK, unsigned char *eBLOCK,
 	*hl = eBLOCK[57];
 	*hn = eBLOCK[58];
 }
+#endif
 
-
+#if 0
 /*
  * Transmitted bits are sent least-significant first.
  */
@@ -371,6 +373,7 @@ static int compress_bits(unsigned char *dbuf, unsigned int dbuf_len,
 	}
 	return pos;
 }
+#endif
 
 
 #if 0

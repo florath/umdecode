@@ -5,7 +5,7 @@
 
 #define DATA_BYTES 23
 
-char const * burst_init = "2,4,3,7,    0, -28,   0,2579799,  6,  0,  0,  0,0001010111010111111010100001010101011101111110101000001001011111011110001001011101111001010111010110101110100010010001010111111011101010101001000000";
+char const * burst_init = "2,4,3,7,    0, -28,   0,     99,  6,  0,  0,  0,0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
 
 CCCHDecoder::CCCHDecoder()
   : m_bursts( { burst_init, burst_init, burst_init, burst_init }),
@@ -77,6 +77,12 @@ void CCCHDecoder::bursts4decode() {
     outmsg[pos++] = c & 0xff;
   }
 
+  for(int u(0); u<4; ++u) {
+    std::cout << "[";
+    m_bursts[u].print_header(std::cout);
+    std::cout << "] ";
+  }
+  
   for(int u(0); u<DATA_BYTES; ++u) {
     printf("%02x ", outmsg[u]);
   }
@@ -106,7 +112,7 @@ void CCCHDecoder::decode(Burst const & b) {
 
   m_bursts[m_burst_cnt++] = b;
   if(m_burst_cnt==4) {
-    std::cout << "CCCH decode" << std::endl;
+std::cout << "CCH decode [" << m_bursts[0].channel_info() << "]" << std::endl;
     bursts4decode();
     m_burst_cnt = 0;
   }

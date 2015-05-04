@@ -216,10 +216,6 @@ std::ostream &ChannelInfo::print(std::ostream &out) const {
   return out;
 }
 
-std::ostream &operator<<(std::ostream &out, ChannelInfo const &ci) {
-  return ci.print(out);
-}
-
 uint8_t const bust_dummy[] = {
     0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0,
     1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
@@ -243,15 +239,6 @@ Burst::Burst(char const *const buf)
 
 ChannelInfo const & Burst::channel_info() const { return m_channel_info; }
 
-std::ostream &Burst::print(std::ostream &out) const {
-  out << m_frame_number << "," << (int)m_time_slot << "," << (int)m_sub_slot
-      << "," << m_channel_info << ",";
-  for (int i(0); i < burst_input_len; ++i) {
-    out << (int)m_input[i];
-  }
-  return out;
-}
-
 std::ostream &operator<<(std::ostream &out, Burst const &b) {
   return b.print(out);
 }
@@ -264,6 +251,7 @@ int main() {
   char buf[197];
 
   CCCHDecoder ccch_decoder;
+  CCCHDecoder bcch_decoder;
   
   while (true) {
     ssize_t const rres(::read(0, buf, 197));
@@ -282,12 +270,21 @@ int main() {
     if (b.is_dummy()) {
       //      std::cout << "Skipping dummy Burst" << std::endl;
       continue;
-    } else {
-      std::cout << b << std::endl;
     }
 
-    if(b.channel_info().channel_type()==CCT::CCCH) {
+    switch(b.channel_info().channel_type()) {
+    case CCT::BCCH:
+      bcch_decoder.decode(b);
+      break;
+    case CCT::CCCH:
       ccch_decoder.decode(b);
+      break;
+
+    // Skip FCCH
+    case CCT::FCCH:
+      break;
+    default:
+      std::cout << b << std::endl;
     }
   }
 }
