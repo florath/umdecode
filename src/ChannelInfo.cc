@@ -175,3 +175,7 @@ std::ostream &ChannelInfo::print(std::ostream &out) const {
       << "]";
   return out;
 }
+
+uint8_t ChannelInfo::sub_slot() const {
+   return m_sub_slot;
+}

@@ -11,6 +11,7 @@ public:
 
   CCT channel_type() const;
   uint8_t burst_offset() const;
+  uint8_t sub_slot() const;
 
 private:
   CCT m_cct;

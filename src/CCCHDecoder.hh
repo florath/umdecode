@@ -8,15 +8,16 @@
 class CCCHDecoder {
 public:
   CCCHDecoder();
-  void decode(Burst const & b);
+  void decode(Burst const &b);
 
 private:
-  void bursts4decode();
-  
+  bool bursts4decode();
+  void bursts4decrypt(uint8_t * key);
+
   Burst m_bursts[4];
   int m_burst_cnt;
   unsigned short interleave_trans[CONV_SIZE];
-  FC_CTX fc_ctx;      
+  FC_CTX fc_ctx;
 };
 
 #endif
