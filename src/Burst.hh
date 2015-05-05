@@ -24,4 +24,6 @@ private:
   uint8_t m_input[burst_input_len];
 };
 
+std::ostream &operator<<(std::ostream &out, Burst const &b);
+
 #endif
