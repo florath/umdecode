@@ -3,8 +3,53 @@
 #include "airprobe/cch.h"
 #include <cstring>
 #include <unistd.h>
+#include "airprobe/gsmtap.h"
 
 #define DATA_BYTES 23
+
+
+/* Sample UDP client */
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <arpa/inet.h>
+
+void send(uint8_t const * const data, uint32_t frame_number)
+{
+  uint32_t constexpr clen(sizeof(gsmtap_hdr) + DATA_BYTES);
+
+  gsmtap_hdr header;
+  header.version = 2;
+  header.hdr_len = 4;
+  header.type = 1;
+  header.timeslot = 7;
+  header.arfcn = 0;
+  header.signal_dbm = -20;
+  header.snr_db = -29;
+  header.frame_number = htonl(frame_number);
+  header.sub_type = 6; // ???
+  header.antenna_nr = 123;
+  header.sub_slot = 3;
+  header.res = 0;
+  
+  uint8_t cdata[clen];
+  memset(cdata, 0, clen);
+  memcpy(cdata, &header, sizeof(gsmtap_hdr));
+  memcpy(cdata + sizeof(gsmtap_hdr), data, DATA_BYTES);
+  
+   struct sockaddr_in servaddr;
+
+   int sockfd(socket(AF_INET,SOCK_DGRAM,0));
+
+   bzero(&servaddr,sizeof(servaddr));
+   servaddr.sin_family = AF_INET;
+   servaddr.sin_addr.s_addr=inet_addr("127.0.0.1");
+   servaddr.sin_port=htons(4729);
+
+   sendto(sockfd, cdata, clen, 0,
+             (struct sockaddr *)&servaddr,sizeof(servaddr));
+}
 
 char const *burst_init = "2,4,3,7,    0, -28,   0,     99,  6,  0,  0,  "
                          "0,"
@@ -27,14 +72,13 @@ CCCHDecoder::CCCHDecoder()
   FC_init(&fc_ctx, 40, 184);
 }
 
-#if 0
+// tst005
+// Kc Selbst berechnet (von Michael)
 uint8_t key[8] =
-    //   836E345EB6F22795
-    //{0x83, 0x6E, 0x34, 0x5E, 0xB6, 0xF2, 0x27, 0x95};
-    {0x95, 0x27, 0xF2, 0xB6, 0x5E, 0x34, 0x6E, 0x83};
-#endif
+    //   dfbfe95b43e11679
+  {0xdf, 0xbf, 0xe9, 0x5b, 0x43, 0xe1, 0x16, 0x79 };
 
-#if 1
+#if 0
 // Der Key aus dem Test von Karsten Nohl
 uint8_t key[8] =
     //   0x1EF00BAB3BAC7002
@@ -77,7 +121,7 @@ void CCCHDecoder::bursts4decrypt(uint8_t *key) {
   }
 }
 
-bool CCCHDecoder::bursts4decode() {
+bool CCCHDecoder::bursts4decode(uint8_t * outmsg) {
   static uint8_t min_error(255);
 
   unsigned char iBLOCK[BLOCKS * iBLOCK_SIZE], conv_data[CONV_SIZE],
@@ -127,7 +171,6 @@ bool CCCHDecoder::bursts4decode() {
     std::cout << "Everything correct" << std::endl;
   }
   // compress bits
-  unsigned char outmsg[28];
   unsigned char sbuf_len = 224;
   int i, j, c, pos = 0;
   for (i = 0; i < sbuf_len; i += 8) {
@@ -167,6 +210,8 @@ void CCCHDecoder::decode(Burst const &b) {
     return;
   }
 
+  uint8_t decrypted_data[DATA_BYTES];
+  
   m_bursts[m_burst_cnt++] = b;
   if (m_burst_cnt == 4) {
     std::cout << "CCH decode [" << m_bursts[0].channel_info() << "]"
@@ -174,9 +219,10 @@ void CCCHDecoder::decode(Burst const &b) {
 
     //    for (uint16_t key_idx(0); key_idx < sizeof(keys); ++key_idx) {
     bursts4decrypt(key);
-    bool const decode_ok = bursts4decode();
+    bool const decode_ok = bursts4decode(decrypted_data);
     if (decode_ok == true) {
       std::cout << "Decode OK!" << std::endl;
+      send(decrypted_data, m_bursts[0].frame_number());
       //      break;
       //      }
     }

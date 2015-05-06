@@ -11,7 +11,7 @@ public:
   void decode(Burst const &b);
 
 private:
-  bool bursts4decode();
+  bool bursts4decode(uint8_t * data);
   void bursts4decrypt(uint8_t * key);
 
   Burst m_bursts[4];
